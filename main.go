@@ -2,7 +2,10 @@ package main
 
 import (
 	"flash-sync-server/config"
+	"flash-sync-server/enums"
 	"fmt"
+	"github.com/iafan/go-l10n/loc"
+	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"gopkg.in/ini.v1"
@@ -10,6 +13,8 @@ import (
 )
 
 var appConfig = &config.AppConfig{}
+var i18n *loc.Context
+var mw *walk.MainWindow
 
 func init() {
 
@@ -26,25 +31,31 @@ func init() {
 		panic(err)
 	}
 
-	// TODO i18n
+	// i18n
+	lang := enums.ZH
+	if appConfig.Language != enums.ZH {
+		lang = enums.EN
+	}
+	lp := loc.NewPool(lang)
+	lp.Resources[enums.ZH] = locjson.Load("translates/zh.json")
+	lp.Resources[enums.EN] = locjson.Load("translates/en.json")
+	i18n = lp.GetContext(lang)
 }
 
 func main() {
 
-	var mw *walk.MainWindow
-
 	MainWindow{
 		AssignTo: &mw,
-		Title:   "SCREAMO",
-		MinSize: Size{600, 400},
-		Layout:  VBox{},
+		Title:    i18n.Tr("app_name"),
+		MinSize:  Size{600, 400},
+		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
-				Text: "&File",
+				Text: i18n.Tr("file"),
 				Items: []MenuItem{
 					Action{
-						Text:        "&Open",
-						Shortcut:    Shortcut{walk.ModControl, walk.KeyO},
+						Text:     i18n.Tr("open"),
+						Shortcut: Shortcut{walk.ModControl, walk.KeyO},
 						OnTriggered: func() {
 
 							fmt.Println("打开文件")
@@ -52,28 +63,20 @@ func main() {
 					},
 					Separator{},
 					Action{
-						Text:        "E&xit",
+						Text:        i18n.Tr("exit"),
 						OnTriggered: func() { mw.Close() },
 					},
 				},
 			},
 			Menu{
-				Text: "&View",
-				Items: []MenuItem{
-					Action{
-						Text:    "浏览",
-						OnTriggered: func() {
-
-							fmt.Println("浏览")
-						},
-					},
-				},
+				Text:  i18n.Tr("language"),
+				Items: buildLangMenu(),
 			},
 			Menu{
 				Text: "&Help",
 				Items: []MenuItem{
 					Action{
-						Text:        "About",
+						Text: "About",
 						OnTriggered: func() {
 
 							fmt.Println("帮助")
@@ -107,4 +110,40 @@ func main() {
 			},
 		},
 	}.Run()
+}
+
+func buildLangMenu() []MenuItem {
+
+	var zhMenu, enMenu *walk.Action
+
+	return []MenuItem{
+		Action{
+			AssignTo: &zhMenu,
+			Text:     enums.ZH,
+			Checked:  appConfig.Language == enums.ZH,
+			OnTriggered: func() {
+
+				appConfig.Language = enums.ZH
+				if nil == appConfig.Save() {
+					_ = zhMenu.SetChecked(true)
+					_ = enMenu.SetChecked(false)
+					walk.MsgBox(mw, i18n.Tr("switch success"), i18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+				}
+			},
+		},
+		Action{
+			AssignTo: &enMenu,
+			Text:     enums.EN,
+			Checked:  appConfig.Language == enums.EN,
+			OnTriggered: func() {
+
+				appConfig.Language = enums.EN
+				if nil == appConfig.Save() {
+					_ = zhMenu.SetChecked(false)
+					_ = enMenu.SetChecked(true)
+					walk.MsgBox(mw, i18n.Tr("switch success"), i18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+				}
+			},
+		},
+	}
 }

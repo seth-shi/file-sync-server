@@ -1,8 +1,7 @@
 package enums
 
-type LanguageType string
 
 var (
-	EN LanguageType = "en"
-	ZH LanguageType = "zh"
+	EN string = "en"
+	ZH string = "zh"
 )

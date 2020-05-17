@@ -1,0 +1,41 @@
+{
+  "app_name": {
+    "message": "同步文件"
+  },
+  "file": {
+    "message": "文件"
+  },
+  "help": {
+    "message": "帮助"
+  },
+  "folder": {
+    "message": "文件夹"
+  },
+  "sync": {
+    "message": "同步"
+  },
+  "about": {
+    "message": "关于"
+  },
+  "exit": {
+    "message": "退出"
+  },
+  "syncing": {
+    "message": "传输中"
+  },
+  "language": {
+    "message": "语言"
+  },
+  "zh": {
+    "message": "中文"
+  },
+  "en": {
+    "message": "英文"
+  },
+  "switch success": {
+    "message": "切换成功"
+  },
+  "please reboot soft": {
+    "message": "请重启软件"
+  }
+}

@@ -1,7 +1,6 @@
 package main
 
-
-func NewTcpServer()  {
+func NewTcpServer() {
 
 	// tcp server
 }

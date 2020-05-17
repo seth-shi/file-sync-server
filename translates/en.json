@@ -1,0 +1,20 @@
+{
+  "hello": {
+    "message": "hello"
+  },
+  "file": {
+    "message": "file"
+  },
+  "help": {
+    "message": "help"
+  },
+  "folder": {
+    "message": "folder"
+  },
+  "sync": {
+    "message": "sync"
+  },
+  "about": {
+    "message": "about"
+  }
+}
