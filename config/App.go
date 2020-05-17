@@ -7,14 +7,24 @@ import (
 type AppConfig struct {
 
 	Name string
+	Language string
 	StartAt string
 
 	Data Data
 
 	Tcp TcpConfig
+
+	// 存储目录，和配置无关
+	savePath string
 }
 
-func (app *AppConfig) SaveToFile(filePath string) error  {
+
+func (app *AppConfig) SetSavePath(path string) *AppConfig {
+	app.savePath = path
+	return app
+}
+
+func (app *AppConfig) Save() error  {
 
 	cfg := ini.Empty()
 	err := ini.ReflectFrom(cfg, app)
@@ -22,5 +32,5 @@ func (app *AppConfig) SaveToFile(filePath string) error  {
 		return err
 	}
 
-	return cfg.SaveTo(filePath)
+	return cfg.SaveTo(app.savePath)
 }
