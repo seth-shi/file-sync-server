@@ -44,11 +44,16 @@ func init() {
 
 func main() {
 
+	mainSize := Size{Width: 400, Height: 300}
+
 	MainWindow{
 		AssignTo: &mw,
-		Title:    i18n.Tr("app_name"),
-		MinSize:  Size{600, 400},
-		Layout:   VBox{},
+		Title:   i18n.Tr("app_name"),
+		Icon: "assets/icons/app.png",
+		Size:    mainSize,
+		MaxSize: mainSize,
+		MinSize: mainSize,
+		Layout: VBox{},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: i18n.Tr("file"),
@@ -87,12 +92,11 @@ func main() {
 		},
 		Children: []Widget{
 			PushButton{
-				Text: "SCREAM",
+				Text: i18n.Tr("select sync path"),
 				OnClicked: func() {
 
 					dlg := new(walk.FileDialog)
-
-					dlg.Title = "选择文件夹"
+					dlg.Title = i18n.Tr("select sync path")
 
 					if ok, err := dlg.ShowBrowseFolder(mw); err != nil {
 						fmt.Println(err)

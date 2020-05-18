@@ -35,6 +35,9 @@
   "switch success": {
     "message": "切换成功"
   },
+  "select sync path": {
+    "message": "选择同步目录"
+  },
   "please reboot soft": {
     "message": "请重启软件"
   }
