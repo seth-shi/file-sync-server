@@ -44,15 +44,13 @@ func init() {
 
 func main() {
 
-	mainSize := Size{Width: 400, Height: 300}
+	var pathLabel *walk.Label
 
 	MainWindow{
 		AssignTo: &mw,
 		Title:   i18n.Tr("app_name"),
 		Icon: "assets/icons/app.png",
-		Size:    mainSize,
-		MaxSize: mainSize,
-		MinSize: mainSize,
+		Size:    Size{Width: 400, Height: 300},
 		Layout: VBox{},
 		MenuItems: []MenuItem{
 			Menu{
@@ -91,6 +89,10 @@ func main() {
 			},
 		},
 		Children: []Widget{
+			Label{
+				AssignTo: &pathLabel,
+				Text: appConfig.Data.Path,
+			},
 			PushButton{
 				Text: i18n.Tr("select sync path"),
 				OnClicked: func() {
@@ -108,8 +110,9 @@ func main() {
 
 					// 存储到环境目录
 					appConfig.Data.Path = dlg.FilePath
-					_ = appConfig.Save()
-					fmt.Println(dlg.FilePath)
+					if nil == appConfig.Save() {
+						_ = pathLabel.SetText(appConfig.Data.Path)
+					}
 				},
 			},
 		},
