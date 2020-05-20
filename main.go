@@ -8,6 +8,8 @@ import (
 	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/ini.v1"
 	"time"
 )
@@ -15,6 +17,7 @@ import (
 var appConfig = &config.AppConfig{}
 var i18n *loc.Context
 var mw *walk.MainWindow
+var db *leveldb.DB
 
 func init() {
 
@@ -40,11 +43,27 @@ func init() {
 	lp.Resources[enums.ZH] = locjson.Load("translates/zh.json")
 	lp.Resources[enums.EN] = locjson.Load("translates/en.json")
 	i18n = lp.GetContext(lang)
+
+
+	db, err = leveldb.OpenFile("data", nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main() {
 
 	var pathLabel *walk.Label
+	// 我的设备
+	iter := db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
+	devices := make(map[string]string)
+	for iter.Next() {
+		// Use key/value.
+		devices[string(iter.Key())] = string(iter.Value())
+	}
+	iter.Release()
+
+	fmt.Println(devices)
 
 	MainWindow{
 		AssignTo: &mw,
