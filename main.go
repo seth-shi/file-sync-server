@@ -11,6 +11,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/ini.v1"
+	"os/exec"
 	"time"
 )
 
@@ -63,7 +64,6 @@ func main() {
 	}
 	iter.Release()
 
-	fmt.Println(devices)
 
 	MainWindow{
 		AssignTo: &mw,
@@ -94,18 +94,26 @@ func main() {
 				Text:  i18n.Tr("language"),
 				Items: buildLangMenu(),
 			},
-			Menu{
-				Text: "&Help",
-				Items: []MenuItem{
-					Action{
-						Text: "About",
-						OnTriggered: func() {
+			Action{
+				Text: i18n.Tr("help"),
+				OnTriggered: func() {
 
-							fmt.Println("帮助")
-						},
-					},
+					err := exec.Command(`cmd`, `/c`, `start`, `https://github.com/seth-shi`).Start()
+
+
+					if err != nil {
+
+						// TODO
+						dialog, err := walk.NewDialog(mw)
+						if err != nil {
+							panic(err)
+						}
+						dialog.SetTitle(`https://github.com/seth-shi`)
+						dialog.Show()
+					}
 				},
 			},
+
 		},
 		Children: []Widget{
 			Label{
