@@ -1,6 +1,7 @@
 package main
 
 import (
+	 "github.com/firstrow/tcp_server"
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
 	"fmt"
@@ -64,7 +65,23 @@ func main() {
 	}
 	iter.Release()
 
+	server := tcp_server.New("localhost:" + appConfig.Tcp.Port)
+	server.OnNewClient(func(c *tcp_server.Client) {
+		// new client connected
+		// lets send some message
+		c.Send("Hello")
+	})
+	server.OnNewMessage(func(c *tcp_server.Client, message string) {
+		// new message received
+	})
+	server.OnClientConnectionClosed(func(c *tcp_server.Client, err error) {
+		// connection with client lost
+	})
 
+	go server.Listen()
+
+
+	fmt.Println("server")
 	MainWindow{
 		AssignTo: &mw,
 		Title:   i18n.Tr("app_name"),
