@@ -1,5 +1,5 @@
 ## 文件传输服务端
-[文件传输客户端]([文件传输服务端](https://github.com/seth-shi/file-sync-client)
+[文件传输客户端](https://github.com/seth-shi/file-sync-client)
 
 ```shell script
 git clone https://github.com/seth-shi/file-sync-server
