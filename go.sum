@@ -1,3 +1,5 @@
+github.com/dmichael/go-multicast v0.0.0-20191021152323-097bfd85720a h1:25JtRbQg7x5VKxwA12V1mr3k0cEZHHnlVXoCVLtwpF0=
+github.com/dmichael/go-multicast v0.0.0-20191021152323-097bfd85720a/go.mod h1:03yBDEz1IjyB9sGdRXFFw1B+Rild6pob4yP7IgX5enU=
 github.com/firstrow/tcp_server v0.0.0-20190424084220-b7a05ff2879d h1:3/oQzvZhwA8Jb5ykb0KehJfsdHokCJdC96k7xy6SJcs=
 github.com/firstrow/tcp_server v0.0.0-20190424084220-b7a05ff2879d/go.mod h1:hGkv6sO57ZC+XrSTyzdIGXX7+O6S3RJb9G8sPopEF/4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=

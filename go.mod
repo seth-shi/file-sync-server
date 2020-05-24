@@ -3,6 +3,7 @@ module flash-sync-server
 go 1.14
 
 require (
+	github.com/dmichael/go-multicast v0.0.0-20191021152323-097bfd85720a // indirect
 	github.com/firstrow/tcp_server v0.0.0-20190424084220-b7a05ff2879d
 	github.com/iafan/Plurr v0.0.0-20200416004027-ca96e77a8f76 // indirect
 	github.com/iafan/go-l10n v0.0.0-20191031185225-4f8f121cf651

@@ -2,40 +2,40 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"time"
 )
 
 func main() {
 
-	// 创建连接
-	socket, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.IPv4(192, 168, 2, 104),
+	// 这里设置接收者的IP地址为广播地址
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{
+		IP:   net.IPv4(127, 0, 0, 1),
 		Port: 8888,
 	})
 
 	if err != nil {
-		fmt.Println("连接失败!", err)
+		println(err.Error())
 		return
 	}
-	defer socket.Close()
 
-	// 发送数据
-	sendData := []byte("hello server!")
-	fmt.Println(sendData)
-	_, err = socket.Write(sendData)
+	buffSize := 4096
+	err = conn.SetReadBuffer(buffSize)
 	if err != nil {
-		fmt.Println("发送数据失败!", err)
-		return
+		log.Panic(err)
 	}
+
+	fmt.Println("staring listen")
 	for {
 		// 接收数据
-		data := make([]byte, 4096)
-		read, remoteAddr, err := socket.ReadFromUDP(data)
+		data := make([]byte, buffSize)
+		read, address, err := conn.ReadFromUDP(data)
 		if err != nil {
-			fmt.Println("读取数据失败!", err)
-			return
+			fmt.Println(err)
 		}
-		fmt.Println(read, remoteAddr)
-		fmt.Printf("%s\n", data)
+
+		log.Println("接收到消息", read, address, string(data))
+		time.Sleep(time.Second)
 	}
 }
