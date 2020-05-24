@@ -1,6 +1,8 @@
 ## 文件传输服务端
 [文件传输客户端](https://github.com/seth-shi/file-sync-client)
 
+> 如果要让网络（同一网络）中的所有计算机都能收到这个数据包，就应该将这个数据包的接收者地址设置为这个网络中的最高的主机号。通常255.255.255.255就可以达到这个要求。所以我们如果要发送一次UDP广播报文，就可以试试如下实例代码：
+
 ```shell script
 git clone https://github.com/seth-shi/file-sync-server
 cd flash-sync-server

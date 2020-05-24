@@ -1,10 +1,13 @@
 package main
 
 import (
-	 "github.com/firstrow/tcp_server"
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
 	"fmt"
+	"os/exec"
+	"time"
+
+	"github.com/firstrow/tcp_server"
 	"github.com/iafan/go-l10n/loc"
 	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
@@ -12,8 +15,6 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/ini.v1"
-	"os/exec"
-	"time"
 )
 
 var appConfig = &config.AppConfig{}
@@ -45,7 +46,6 @@ func init() {
 	lp.Resources[enums.ZH] = locjson.Load("translates/zh.json")
 	lp.Resources[enums.EN] = locjson.Load("translates/en.json")
 	i18n = lp.GetContext(lang)
-
 
 	db, err = leveldb.OpenFile("data", nil)
 	if err != nil {
@@ -80,14 +80,13 @@ func main() {
 
 	go server.Listen()
 
-
 	fmt.Println("server")
 	MainWindow{
 		AssignTo: &mw,
-		Title:   i18n.Tr("app_name"),
-		Icon: "assets/icons/app.png",
-		Size:    Size{Width: 400, Height: 300},
-		Layout: VBox{},
+		Title:    i18n.Tr("app_name"),
+		Icon:     "assets/icons/app.png",
+		Size:     Size{Width: 400, Height: 300},
+		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: i18n.Tr("file"),
@@ -117,7 +116,6 @@ func main() {
 
 					err := exec.Command(`cmd`, `/c`, `start`, `https://github.com/seth-shi`).Start()
 
-
 					if err != nil {
 
 						// TODO
@@ -130,12 +128,11 @@ func main() {
 					}
 				},
 			},
-
 		},
 		Children: []Widget{
 			Label{
 				AssignTo: &pathLabel,
-				Text: appConfig.Data.Path,
+				Text:     appConfig.Data.Path,
 			},
 			PushButton{
 				Text: i18n.Tr("select sync path"),
