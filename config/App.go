@@ -7,6 +7,7 @@ import (
 type AppConfig struct {
 
 	Name string
+	Env string
 	Language string
 	StartAt string
 
@@ -18,6 +19,18 @@ type AppConfig struct {
 	savePath string
 }
 
+func NewAppConfig() *AppConfig {
+
+	return &AppConfig{
+		Env: "dev",
+	}
+}
+
+
+func (app *AppConfig) Environment(env string) bool {
+
+	return env == app.Env
+}
 
 func (app *AppConfig) SetSavePath(path string) *AppConfig {
 	app.savePath = path

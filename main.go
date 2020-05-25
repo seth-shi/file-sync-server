@@ -4,10 +4,11 @@ import (
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
 	"fmt"
+	"log"
+	"net"
 	"os/exec"
 	"time"
 
-	"github.com/firstrow/tcp_server"
 	"github.com/iafan/go-l10n/loc"
 	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
@@ -17,10 +18,12 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-var appConfig = &config.AppConfig{}
-var i18n *loc.Context
-var mw *walk.MainWindow
-var db *leveldb.DB
+var (
+	appConfig = config.NewAppConfig()
+	i18n      *loc.Context
+	mw        *walk.MainWindow
+	db        *leveldb.DB
+)
 
 func init() {
 
@@ -31,10 +34,14 @@ func init() {
 		panic(err)
 	}
 
-	appConfig.StartAt = time.Now().Format("2006-01-02 15:04:05")
-	err = appConfig.SetSavePath(iniPath).Save()
-	if err != nil {
-		panic(err)
+	// 不是开发环境才写入启动时间
+	if !appConfig.Environment("dev") {
+
+		appConfig.StartAt = time.Now().Format("2006-01-02 15:04:05")
+		err = appConfig.SetSavePath(iniPath).Save()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// i18n
@@ -53,7 +60,35 @@ func init() {
 	}
 }
 
+func sendConnectPack(ticker *time.Ticker) {
+
+	// 每隔 5s 发送一个广播包
+	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
+	dstAddr := &net.UDPAddr{IP: net.IPv4bcast, Port: 8888}
+
+	broadcast, err := net.ListenUDP("udp", srcAddr)
+	if err != nil {
+
+		panic(err)
+	}
+
+	for _ = range ticker.C {
+
+		// 发送数据包
+		msg := "hello"
+		_, err := broadcast.WriteToUDP([]byte(msg), dstAddr)
+		log.Printf(msg)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
+
 func main() {
+
+	// 发送数据连接包
+	ticker := time.NewTicker(5 * time.Second)
+	go sendConnectPack(ticker)
 
 	var pathLabel *walk.Label
 	// 我的设备
@@ -65,22 +100,6 @@ func main() {
 	}
 	iter.Release()
 
-	server := tcp_server.New("localhost:" + appConfig.Tcp.Port)
-	server.OnNewClient(func(c *tcp_server.Client) {
-		// new client connected
-		// lets send some message
-		c.Send("Hello")
-	})
-	server.OnNewMessage(func(c *tcp_server.Client, message string) {
-		// new message received
-	})
-	server.OnClientConnectionClosed(func(c *tcp_server.Client, err error) {
-		// connection with client lost
-	})
-
-	go server.Listen()
-
-	fmt.Println("server")
 	MainWindow{
 		AssignTo: &mw,
 		Title:    i18n.Tr("app_name"),
