@@ -2,19 +2,16 @@ package main
 
 import (
 	"flash-sync-server/enums"
+	"flash-sync-server/serveices"
 	"fmt"
 	"log"
-	"net"
 	"os/exec"
 	"time"
 
+	. "flash-sync-server/global"
+
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
-	"github.com/syndtr/goleveldb/leveldb/util"
-)
-
-var (
-	app *App = NewApp()
 )
 
 func init() {
@@ -23,17 +20,8 @@ func init() {
 
 func main() {
 
-	// 发送数据连接包
-	ticker := time.NewTicker(5 * time.Second)
-	go sendConnectPack(ticker)
-
-	// 读取所有设备号
-	iter := app.Db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
-	for iter.Next() {
-		// Use key/value.
-		app.ClientDevices[string(iter.Key())] = string(iter.Value())
-	}
-	iter.Release()
+	// 每隔 5s 发送一次 udp 数据包
+	go serveices.SendConnectUdpPack(time.NewTicker(5 * time.Second))
 
 	//logTicker := time.NewTicker(3 * time.Second)
 	go func() {
@@ -43,7 +31,7 @@ func main() {
 		//	App.MainWindow.Synchronize(func() {
 		//		trackLatest := lb.ItemVisible(len(lb.Model())-1) && len(lb.SelectedIndexes()) <= 1
 		//
-		//		model.items = append(model.items, logEntry{time.Now(), "Some new stuff."})
+		//		model.items = Append(model.items, logEntry{time.Now(), "Some new stuff."})
 		//		index := len(model.items) - 1
 		//		model.PublishItemsInserted(index, index)
 		//
@@ -62,49 +50,22 @@ func main() {
 	runMainWindow()
 }
 
-func sendConnectPack(ticker *time.Ticker) {
-
-	udpPort, tcpPort := app.Config.Udp.Port, app.Config.Tcp.Port
-
-	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
-	dstAddr := &net.UDPAddr{IP: net.IPv4bcast, Port: udpPort}
-
-	broadcast, err := net.ListenUDP("udp", srcAddr)
-	if err != nil {
-
-		panic(err)
-	}
-
-	log.Printf("start udp broadcast, udp port: %d", udpPort)
-
-	for _ = range ticker.C {
-
-		// 广播自己的 tcp 端口
-		msg := fmt.Sprintf("hello ! my tcp port=[%d]", tcpPort)
-		_, err := broadcast.WriteToUDP([]byte(msg), dstAddr)
-		log.Printf(msg)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-}
-
 func runMainWindow() {
 
 	var pathLabel *walk.Label
 
 	_, err := MainWindow{
-		AssignTo: &app.MainWindow,
-		Title:    app.I18n.Tr("app_name"),
+		AssignTo: &App.MainWindow,
+		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
 		Size:     Size{Width: 400, Height: 300},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
-				Text: app.I18n.Tr("file"),
+				Text: App.I18n.Tr("file"),
 				Items: []MenuItem{
 					Action{
-						Text:     app.I18n.Tr("open"),
+						Text:     App.I18n.Tr("open"),
 						Shortcut: Shortcut{walk.ModControl, walk.KeyO},
 						OnTriggered: func() {
 
@@ -113,17 +74,17 @@ func runMainWindow() {
 					},
 					Separator{},
 					Action{
-						Text:        app.I18n.Tr("exit"),
-						OnTriggered: func() { app.MainWindow.Close() },
+						Text:        App.I18n.Tr("exit"),
+						OnTriggered: func() { App.MainWindow.Close() },
 					},
 				},
 			},
 			Menu{
-				Text:  app.I18n.Tr("language"),
+				Text:  App.I18n.Tr("language"),
 				Items: buildLangMenu(),
 			},
 			Action{
-				Text: app.I18n.Tr("help"),
+				Text: App.I18n.Tr("help"),
 				OnTriggered: func() {
 
 					err := exec.Command(`cmd`, `/c`, `start`, `https://github.com/seth-shi`).Start()
@@ -131,7 +92,7 @@ func runMainWindow() {
 					if err != nil {
 
 						// TODO
-						dialog, err := walk.NewDialog(app.MainWindow)
+						dialog, err := walk.NewDialog(App.MainWindow)
 						if err != nil {
 							panic(err)
 						}
@@ -144,16 +105,16 @@ func runMainWindow() {
 		Children: []Widget{
 			Label{
 				AssignTo: &pathLabel,
-				Text:     app.Config.Data.Path,
+				Text:     App.Config.Data.Path,
 			},
 			PushButton{
-				Text: app.I18n.Tr("select sync path"),
+				Text: App.I18n.Tr("select sync path"),
 				OnClicked: func() {
 
 					dlg := new(walk.FileDialog)
-					dlg.Title = app.I18n.Tr("select sync path")
+					dlg.Title = App.I18n.Tr("select sync path")
 
-					if ok, err := dlg.ShowBrowseFolder(app.MainWindow); err != nil {
+					if ok, err := dlg.ShowBrowseFolder(App.MainWindow); err != nil {
 						fmt.Println(err)
 						return
 					} else if !ok {
@@ -162,15 +123,15 @@ func runMainWindow() {
 					}
 
 					// 存储到环境目录
-					app.Config.Data.Path = dlg.FilePath
-					if nil == app.Config.Save() {
-						_ = pathLabel.SetText(app.Config.Data.Path)
+					App.Config.Data.Path = dlg.FilePath
+					if nil == App.Config.Save() {
+						_ = pathLabel.SetText(App.Config.Data.Path)
 					}
 				},
 			},
 			ListBox{
-				AssignTo: &app.LogList,
-				Model:    app.Logs,
+				AssignTo: &App.LogList,
+				Model:    App.Logs,
 			},
 		},
 	}.Run()
@@ -189,28 +150,28 @@ func buildLangMenu() []MenuItem {
 		Action{
 			AssignTo: &zhMenu,
 			Text:     enums.ZH,
-			Checked:  app.Config.Language == enums.ZH,
+			Checked:  App.Config.Language == enums.ZH,
 			OnTriggered: func() {
 
-				app.Config.Language = enums.ZH
-				if nil == app.Config.Save() {
+				App.Config.Language = enums.ZH
+				if nil == App.Config.Save() {
 					_ = zhMenu.SetChecked(true)
 					_ = enMenu.SetChecked(false)
-					walk.MsgBox(app.MainWindow, app.I18n.Tr("switch success"), app.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 				}
 			},
 		},
 		Action{
 			AssignTo: &enMenu,
 			Text:     enums.EN,
-			Checked:  app.Config.Language == enums.EN,
+			Checked:  App.Config.Language == enums.EN,
 			OnTriggered: func() {
 
-				app.Config.Language = enums.EN
-				if nil == app.Config.Save() {
+				App.Config.Language = enums.EN
+				if nil == App.Config.Save() {
 					_ = zhMenu.SetChecked(false)
 					_ = enMenu.SetChecked(true)
-					walk.MsgBox(app.MainWindow, app.I18n.Tr("switch success"), app.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 				}
 			},
 		},
