@@ -3,7 +3,7 @@ package global
 import (
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
-	"flash-sync-server/models"
+	"flash-sync-server/serveices"
 	"time"
 
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -115,7 +115,7 @@ type application struct {
 	I18n *loc.Context
 
 	// 日志
-	Logs []models.LogModel
+	Log serveices.LogModel
 	// 客户端的设备号
 	ClientDevices map[string]string
 }

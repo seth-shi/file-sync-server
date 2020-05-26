@@ -8,8 +8,6 @@ import (
 	"os/exec"
 	"time"
 
-	. "flash-sync-server/global"
-
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 )
@@ -23,27 +21,28 @@ func main() {
 	// 每隔 5s 发送一次 udp 数据包
 	go serveices.SendConnectUdpPack(time.NewTicker(5 * time.Second))
 
-	//logTicker := time.NewTicker(3 * time.Second)
+	logTicker := time.NewTicker(3 * time.Second)
 	go func() {
 
-		//for t := range logTicker.C {
-		//
-		//	App.MainWindow.Synchronize(func() {
-		//		trackLatest := lb.ItemVisible(len(lb.Model())-1) && len(lb.SelectedIndexes()) <= 1
-		//
-		//		model.items = Append(model.items, logEntry{time.Now(), "Some new stuff."})
-		//		index := len(model.items) - 1
-		//		model.PublishItemsInserted(index, index)
-		//
-		//		if trackLatest {
-		//			lb.EnsureItemVisible(len(model.items) - 1)
-		//		}
-		//	})
-		//	logModel.PushLog(t.String())
-		//
-		//	err := lb.SetModel(logModel)
-		//	log.Println("push items", err)
-		//}
+		for t := range logTicker.C {
+
+			App.MainWindow.Synchronize(func() {
+
+				index := App.Log.ItemCount() - 1
+
+				trackLatest := App.LogList.ItemVisible(index) &&
+					len(App.LogList.SelectedIndexes()) <= 1
+
+				items := append(App.Log.Logs(), serveices.InfoLog("写入日志"))
+				App.Log.PublishItemsInserted(index, index)
+
+				if trackLatest {
+					App.LogList.EnsureItemVisible(len(items) - 1)
+				}
+			})
+
+			log.Println("push items", t)
+		}
 	}()
 
 	// 程序主窗口运行
