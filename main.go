@@ -3,6 +3,7 @@ package main
 import (
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
+	"flash-sync-server/models"
 	"fmt"
 	"log"
 	"net"
@@ -22,7 +23,11 @@ var (
 	appConfig = config.NewAppConfig()
 	i18n      *loc.Context
 	mw        *walk.MainWindow
+	lb		  *walk.ListBox
 	db        *leveldb.DB
+
+	logModel      = models.NewLogModel()
+	clientDevices = make(map[string]string)
 )
 
 func init() {
@@ -60,6 +65,37 @@ func init() {
 	}
 }
 
+func main() {
+
+	// 发送数据连接包
+	ticker := time.NewTicker(5 * time.Second)
+	go sendConnectPack(ticker)
+
+	// 读取所有设备号
+	iter := db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
+	for iter.Next() {
+		// Use key/value.
+		clientDevices[string(iter.Key())] = string(iter.Value())
+	}
+	iter.Release()
+
+	logTicker := time.NewTicker(3 * time.Second)
+	go func() {
+
+		for t := range logTicker.C {
+
+			logModel.PushLog(t.String())
+
+			err := lb.SetModel(logModel)
+			log.Println("push items", err)
+		}
+	}()
+
+
+	// 程序主窗口运行
+	runMainWindow()
+}
+
 func sendConnectPack(ticker *time.Ticker) {
 
 	udpPort, tcpPort := appConfig.Udp.Port, appConfig.Tcp.Port
@@ -87,23 +123,11 @@ func sendConnectPack(ticker *time.Ticker) {
 	}
 }
 
-func main() {
-
-	// 发送数据连接包
-	ticker := time.NewTicker(5 * time.Second)
-	go sendConnectPack(ticker)
+func runMainWindow() {
 
 	var pathLabel *walk.Label
-	// 我的设备
-	iter := db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
-	devices := make(map[string]string)
-	for iter.Next() {
-		// Use key/value.
-		devices[string(iter.Key())] = string(iter.Value())
-	}
-	iter.Release()
 
-	MainWindow{
+	_, err := MainWindow{
 		AssignTo: &mw,
 		Title:    i18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
@@ -178,8 +202,17 @@ func main() {
 					}
 				},
 			},
+			ListBox{
+				AssignTo: &lb,
+				Model: logModel,
+			},
 		},
 	}.Run()
+
+	if err != nil {
+
+		log.Println("exit err", err)
+	}
 }
 
 func buildLangMenu() []MenuItem {
