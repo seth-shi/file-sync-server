@@ -5,14 +5,14 @@ import (
 )
 
 type AppConfig struct {
-
-	Name string
-	Env string
+	Name     string
+	Env      string
 	Language string
-	StartAt string
+	StartAt  string
 
-	Data Data
+	Data DataConfig
 
+	Udp UdpConfig
 	Tcp TcpConfig
 
 	// 存储目录，和配置无关
@@ -26,7 +26,6 @@ func NewAppConfig() *AppConfig {
 	}
 }
 
-
 func (app *AppConfig) Environment(env string) bool {
 
 	return env == app.Env
@@ -37,7 +36,7 @@ func (app *AppConfig) SetSavePath(path string) *AppConfig {
 	return app
 }
 
-func (app *AppConfig) Save() error  {
+func (app *AppConfig) Save() error {
 
 	cfg := ini.Empty()
 	err := ini.ReflectFrom(cfg, app)

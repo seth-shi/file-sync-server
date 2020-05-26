@@ -1,6 +1,5 @@
 package config
 
-type Data struct {
-
+type DataConfig struct {
 	Path string
 }

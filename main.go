@@ -62,9 +62,10 @@ func init() {
 
 func sendConnectPack(ticker *time.Ticker) {
 
-	// 每隔 5s 发送一个广播包
+	udpPort, tcpPort := appConfig.Udp.Port, appConfig.Tcp.Port
+
 	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
-	dstAddr := &net.UDPAddr{IP: net.IPv4bcast, Port: 8888}
+	dstAddr := &net.UDPAddr{IP: net.IPv4bcast, Port: udpPort}
 
 	broadcast, err := net.ListenUDP("udp", srcAddr)
 	if err != nil {
@@ -72,10 +73,12 @@ func sendConnectPack(ticker *time.Ticker) {
 		panic(err)
 	}
 
+	log.Printf("start udp broadcast, udp port: %d", udpPort)
+
 	for _ = range ticker.C {
 
-		// 发送数据包
-		msg := "hello"
+		// 广播自己的 tcp 端口
+		msg := fmt.Sprintf("hello ! my tcp port=[%d]", tcpPort)
 		_, err := broadcast.WriteToUDP([]byte(msg), dstAddr)
 		log.Printf(msg)
 		if err != nil {
