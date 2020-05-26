@@ -1,68 +1,24 @@
 package main
 
 import (
-	"flash-sync-server/config"
 	"flash-sync-server/enums"
-	"flash-sync-server/models"
 	"fmt"
 	"log"
 	"net"
 	"os/exec"
 	"time"
 
-	"github.com/iafan/go-l10n/loc"
-	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
-	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"gopkg.in/ini.v1"
 )
 
 var (
-	appConfig = config.NewAppConfig()
-	i18n      *loc.Context
-	mw        *walk.MainWindow
-	lb		  *walk.ListBox
-	db        *leveldb.DB
-
-	logModel      = models.NewLogModel()
-	clientDevices = make(map[string]string)
+	app *App = NewApp()
 )
 
 func init() {
 
-	// 加载配置文件
-	iniPath := "conf.ini"
-	err := ini.MapTo(appConfig, iniPath)
-	if err != nil {
-		panic(err)
-	}
-
-	// 不是开发环境才写入启动时间
-	if !appConfig.Environment("dev") {
-
-		appConfig.StartAt = time.Now().Format("2006-01-02 15:04:05")
-		err = appConfig.SetSavePath(iniPath).Save()
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	// i18n
-	lang := enums.ZH
-	if appConfig.Language != enums.ZH {
-		lang = enums.EN
-	}
-	lp := loc.NewPool(lang)
-	lp.Resources[enums.ZH] = locjson.Load("translates/zh.json")
-	lp.Resources[enums.EN] = locjson.Load("translates/en.json")
-	i18n = lp.GetContext(lang)
-
-	db, err = leveldb.OpenFile("data", nil)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func main() {
@@ -72,25 +28,35 @@ func main() {
 	go sendConnectPack(ticker)
 
 	// 读取所有设备号
-	iter := db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
+	iter := app.Db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
 	for iter.Next() {
 		// Use key/value.
-		clientDevices[string(iter.Key())] = string(iter.Value())
+		app.ClientDevices[string(iter.Key())] = string(iter.Value())
 	}
 	iter.Release()
 
-	logTicker := time.NewTicker(3 * time.Second)
+	//logTicker := time.NewTicker(3 * time.Second)
 	go func() {
 
-		for t := range logTicker.C {
-
-			logModel.PushLog(t.String())
-
-			err := lb.SetModel(logModel)
-			log.Println("push items", err)
-		}
+		//for t := range logTicker.C {
+		//
+		//	App.MainWindow.Synchronize(func() {
+		//		trackLatest := lb.ItemVisible(len(lb.Model())-1) && len(lb.SelectedIndexes()) <= 1
+		//
+		//		model.items = append(model.items, logEntry{time.Now(), "Some new stuff."})
+		//		index := len(model.items) - 1
+		//		model.PublishItemsInserted(index, index)
+		//
+		//		if trackLatest {
+		//			lb.EnsureItemVisible(len(model.items) - 1)
+		//		}
+		//	})
+		//	logModel.PushLog(t.String())
+		//
+		//	err := lb.SetModel(logModel)
+		//	log.Println("push items", err)
+		//}
 	}()
-
 
 	// 程序主窗口运行
 	runMainWindow()
@@ -98,7 +64,7 @@ func main() {
 
 func sendConnectPack(ticker *time.Ticker) {
 
-	udpPort, tcpPort := appConfig.Udp.Port, appConfig.Tcp.Port
+	udpPort, tcpPort := app.Config.Udp.Port, app.Config.Tcp.Port
 
 	srcAddr := &net.UDPAddr{IP: net.IPv4zero, Port: 0}
 	dstAddr := &net.UDPAddr{IP: net.IPv4bcast, Port: udpPort}
@@ -128,17 +94,17 @@ func runMainWindow() {
 	var pathLabel *walk.Label
 
 	_, err := MainWindow{
-		AssignTo: &mw,
-		Title:    i18n.Tr("app_name"),
+		AssignTo: &app.MainWindow,
+		Title:    app.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
 		Size:     Size{Width: 400, Height: 300},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
-				Text: i18n.Tr("file"),
+				Text: app.I18n.Tr("file"),
 				Items: []MenuItem{
 					Action{
-						Text:     i18n.Tr("open"),
+						Text:     app.I18n.Tr("open"),
 						Shortcut: Shortcut{walk.ModControl, walk.KeyO},
 						OnTriggered: func() {
 
@@ -147,17 +113,17 @@ func runMainWindow() {
 					},
 					Separator{},
 					Action{
-						Text:        i18n.Tr("exit"),
-						OnTriggered: func() { mw.Close() },
+						Text:        app.I18n.Tr("exit"),
+						OnTriggered: func() { app.MainWindow.Close() },
 					},
 				},
 			},
 			Menu{
-				Text:  i18n.Tr("language"),
+				Text:  app.I18n.Tr("language"),
 				Items: buildLangMenu(),
 			},
 			Action{
-				Text: i18n.Tr("help"),
+				Text: app.I18n.Tr("help"),
 				OnTriggered: func() {
 
 					err := exec.Command(`cmd`, `/c`, `start`, `https://github.com/seth-shi`).Start()
@@ -165,7 +131,7 @@ func runMainWindow() {
 					if err != nil {
 
 						// TODO
-						dialog, err := walk.NewDialog(mw)
+						dialog, err := walk.NewDialog(app.MainWindow)
 						if err != nil {
 							panic(err)
 						}
@@ -178,16 +144,16 @@ func runMainWindow() {
 		Children: []Widget{
 			Label{
 				AssignTo: &pathLabel,
-				Text:     appConfig.Data.Path,
+				Text:     app.Config.Data.Path,
 			},
 			PushButton{
-				Text: i18n.Tr("select sync path"),
+				Text: app.I18n.Tr("select sync path"),
 				OnClicked: func() {
 
 					dlg := new(walk.FileDialog)
-					dlg.Title = i18n.Tr("select sync path")
+					dlg.Title = app.I18n.Tr("select sync path")
 
-					if ok, err := dlg.ShowBrowseFolder(mw); err != nil {
+					if ok, err := dlg.ShowBrowseFolder(app.MainWindow); err != nil {
 						fmt.Println(err)
 						return
 					} else if !ok {
@@ -196,15 +162,15 @@ func runMainWindow() {
 					}
 
 					// 存储到环境目录
-					appConfig.Data.Path = dlg.FilePath
-					if nil == appConfig.Save() {
-						_ = pathLabel.SetText(appConfig.Data.Path)
+					app.Config.Data.Path = dlg.FilePath
+					if nil == app.Config.Save() {
+						_ = pathLabel.SetText(app.Config.Data.Path)
 					}
 				},
 			},
 			ListBox{
-				AssignTo: &lb,
-				Model: logModel,
+				AssignTo: &app.LogList,
+				Model:    app.Logs,
 			},
 		},
 	}.Run()
@@ -223,28 +189,28 @@ func buildLangMenu() []MenuItem {
 		Action{
 			AssignTo: &zhMenu,
 			Text:     enums.ZH,
-			Checked:  appConfig.Language == enums.ZH,
+			Checked:  app.Config.Language == enums.ZH,
 			OnTriggered: func() {
 
-				appConfig.Language = enums.ZH
-				if nil == appConfig.Save() {
+				app.Config.Language = enums.ZH
+				if nil == app.Config.Save() {
 					_ = zhMenu.SetChecked(true)
 					_ = enMenu.SetChecked(false)
-					walk.MsgBox(mw, i18n.Tr("switch success"), i18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+					walk.MsgBox(app.MainWindow, app.I18n.Tr("switch success"), app.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 				}
 			},
 		},
 		Action{
 			AssignTo: &enMenu,
 			Text:     enums.EN,
-			Checked:  appConfig.Language == enums.EN,
+			Checked:  app.Config.Language == enums.EN,
 			OnTriggered: func() {
 
-				appConfig.Language = enums.EN
-				if nil == appConfig.Save() {
+				app.Config.Language = enums.EN
+				if nil == app.Config.Save() {
 					_ = zhMenu.SetChecked(false)
 					_ = enMenu.SetChecked(true)
-					walk.MsgBox(mw, i18n.Tr("switch success"), i18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+					walk.MsgBox(app.MainWindow, app.I18n.Tr("switch success"), app.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 				}
 			},
 		},
