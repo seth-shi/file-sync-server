@@ -2,6 +2,8 @@ package main
 
 import (
 	"flash-sync-server/enums"
+	. "flash-sync-server/global"
+	"flash-sync-server/models"
 	"flash-sync-server/serveices"
 	"fmt"
 	"log"
@@ -10,6 +12,11 @@ import (
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+)
+
+
+const (
+	APP_WIDTH = 400
 )
 
 func init() {
@@ -21,27 +28,30 @@ func main() {
 	// 每隔 5s 发送一次 udp 数据包
 	go serveices.SendConnectUdpPack(time.NewTicker(5 * time.Second))
 
-	logTicker := time.NewTicker(3 * time.Second)
+	logTicker := time.NewTicker(time.Millisecond * 500)
+	i := 0
 	go func() {
 
-		for t := range logTicker.C {
+		for _ = range logTicker.C {
+
+			if App.MainWindow == nil {
+				continue
+			}
+
 
 			App.MainWindow.Synchronize(func() {
 
-				index := App.Log.ItemCount() - 1
+				info := models.InfoLog("write info log")
 
-				trackLatest := App.LogList.ItemVisible(index) &&
-					len(App.LogList.SelectedIndexes()) <= 1
+				i ++
+				if i%3==0 {
+					info := models.ErrorLog("write err log")
+					info.PushToView(App.LogView)
 
-				items := append(App.Log.Logs(), serveices.InfoLog("写入日志"))
-				App.Log.PublishItemsInserted(index, index)
-
-				if trackLatest {
-					App.LogList.EnsureItemVisible(len(items) - 1)
+				} else {
+					info.PushToView(App.LogView)
 				}
 			})
-
-			log.Println("push items", t)
 		}
 	}()
 
@@ -57,24 +67,31 @@ func runMainWindow() {
 		AssignTo: &App.MainWindow,
 		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
-		Size:     Size{Width: 400, Height: 300},
+		Size:     Size{Width: APP_WIDTH, Height: 300},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: App.I18n.Tr("file"),
 				Items: []MenuItem{
 					Action{
-						Text:     App.I18n.Tr("open"),
-						Shortcut: Shortcut{walk.ModControl, walk.KeyO},
+						Text:     App.I18n.Tr("clear logs"),
+						Shortcut: Shortcut{walk.ModControl, walk.KeyC},
 						OnTriggered: func() {
 
-							fmt.Println("打开文件")
+							App.MainWindow.Synchronize(func() {
+
+								err := App.LogView.Children().Clear()
+								fmt.Println(err)
+							})
 						},
 					},
 					Separator{},
 					Action{
 						Text:        App.I18n.Tr("exit"),
-						OnTriggered: func() { App.MainWindow.Close() },
+						OnTriggered: func() {
+
+							App.MainWindow.Close()
+						},
 					},
 				},
 			},
@@ -128,12 +145,16 @@ func runMainWindow() {
 					}
 				},
 			},
-			ListBox{
-				AssignTo: &App.LogList,
-				Model:    App.Logs,
+			ScrollView{
+				AssignTo: &App.LogView,
+				HorizontalFixed: true,
+				Alignment: AlignHNearVNear,
+				Layout:          VBox{MarginsZero: true},
+				Children: []Widget{},
 			},
 		},
 	}.Run()
+
 
 	if err != nil {
 
@@ -153,11 +174,16 @@ func buildLangMenu() []MenuItem {
 			OnTriggered: func() {
 
 				App.Config.Language = enums.ZH
-				if nil == App.Config.Save() {
-					_ = zhMenu.SetChecked(true)
-					_ = enMenu.SetChecked(false)
-					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+				if err := App.Config.Save(); err != nil {
+
+					fmt.Println(err)
+					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch fail"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconError)
+					return
 				}
+
+				_ = zhMenu.SetChecked(true)
+				_ = enMenu.SetChecked(false)
+				walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 			},
 		},
 		Action{
@@ -167,11 +193,15 @@ func buildLangMenu() []MenuItem {
 			OnTriggered: func() {
 
 				App.Config.Language = enums.EN
-				if nil == App.Config.Save() {
-					_ = zhMenu.SetChecked(false)
-					_ = enMenu.SetChecked(true)
-					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
+				if err := App.Config.Save(); err != nil {
+					fmt.Println(err)
+					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch fail"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconError)
+					return
 				}
+
+				_ = zhMenu.SetChecked(false)
+				_ = enMenu.SetChecked(true)
+				walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
 			},
 		},
 	}

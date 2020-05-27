@@ -3,7 +3,7 @@ package global
 import (
 	"flash-sync-server/config"
 	"flash-sync-server/enums"
-	"flash-sync-server/serveices"
+	"flash-sync-server/models"
 	"time"
 
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -33,6 +33,7 @@ func init() {
 		I18n:          i18n,
 		Db:            db,
 		ClientDevices: devices,
+		LogModel: make([]*models.LogEntry, 1000),
 	}
 }
 
@@ -43,15 +44,18 @@ func loadIniConfig(path string) *config.AppConfig {
 		panic(err)
 	}
 
+	appConfig.SetSavePath(path)
+
 	// 不是开发环境才写入启动时间
 	if !appConfig.Environment("dev") {
 
 		appConfig.StartAt = time.Now().Format("2006-01-02 15:04:05")
-		err = appConfig.SetSavePath(path).Save()
+		err = appConfig.Save()
 		if err != nil {
 			panic(err)
 		}
 	}
+
 
 	return appConfig
 }
@@ -102,7 +106,7 @@ type application struct {
 	 */
 	MainWindow *walk.MainWindow
 
-	LogList *walk.ListBox
+	LogView *walk.ScrollView
 
 	/*******************************************
 	*  所有的数据管理
@@ -115,7 +119,8 @@ type application struct {
 	I18n *loc.Context
 
 	// 日志
-	Log serveices.LogModel
+	LogModel []*models.LogEntry
+
 	// 客户端的设备号
 	ClientDevices map[string]string
 }

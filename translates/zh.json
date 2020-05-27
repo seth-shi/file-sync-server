@@ -32,8 +32,14 @@
   "en": {
     "message": "英文"
   },
+  "clear logs": {
+    "message": "清空日志"
+  },
   "switch success": {
     "message": "切换成功"
+  },
+  "switch fail": {
+    "message": "切换失败"
   },
   "select sync path": {
     "message": "选择同步目录"

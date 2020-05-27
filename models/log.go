@@ -1,40 +1,71 @@
-package serveices
+package models
 
 import (
-	"time"
-
+	"flash-sync-server/enums"
 	"github.com/lxn/walk"
+	. "github.com/lxn/walk/declarative"
+	"strings"
+	"time"
 )
 
-type LogModel struct {
-	walk.ReflectListModelBase
-	items []*logEntry
+const (
+	INFO = "info"
+	WARING = "waring"
+	ERROR = "error"
+)
+
+var labelBgColor = SolidColorBrush{Color: walk.RGB(240, 240, 240)}
+var labelTextColorMap = map[string]walk.Color{
+	INFO: walk.RGB(100, 100, 100),
+	WARING: walk.RGB(255, 241, 0),
+	ERROR: walk.RGB(153, 0, 51),
 }
 
-func (m *LogModel) Logs() []*logEntry {
-	return m.items
-}
 
-func (m *LogModel) Items() interface{} {
-	return m.items
-}
+type LogEntry struct {
 
-type logEntry struct {
-	timestamp time.Time
+	createdAt time.Time
 
 	messageType    string
 	messageContent string
 }
 
-func InfoLog(content string) *logEntry {
+func InfoLog(content string) *LogEntry {
 
-	return &logEntry{time.Now(), "info", content}
+	return &LogEntry{time.Now(), INFO, content}
 }
 
-func (m *LogModel) ItemCount() int {
-	return len(m.items)
+func WaringLog(content string) *LogEntry {
+
+	return &LogEntry{time.Now(), WARING, content}
 }
 
-func (m *LogModel) Value(index int) interface{} {
-	return m.items[index]
+func ErrorLog(content string) *LogEntry {
+
+	return &LogEntry{time.Now(), ERROR, content}
+}
+
+func (l *LogEntry) PushToView(parent walk.Container) error {
+
+	logs := []string{
+		l.createdAt.Format("2006-01-02 15:04:05"),
+		//l.messageType,
+		l.messageContent,
+	}
+
+
+	color, exists := labelTextColorMap[l.messageType]
+	if ! exists {
+		color, _ = labelTextColorMap[INFO]
+	}
+
+	label := Label{
+		MinSize:Size{enums.APP_SIZE - (9*6), 0},
+		Alignment: AlignHNearVNear,
+		TextColor: color,
+		Background: labelBgColor,
+		Text: strings.Join(logs, "  "),
+	}
+
+	return label.Create(NewBuilder(parent))
 }
