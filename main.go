@@ -13,7 +13,6 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-
 func init() {
 
 	// 每隔 5s 发送一次 udp 数据包
@@ -47,47 +46,50 @@ func runMainWindow() {
 				Text: App.I18n.Tr("file"),
 				Items: []MenuItem{
 					Action{
-						Text:     App.I18n.Tr("clear logs"),
-						Shortcut: Shortcut{walk.ModControl, walk.KeyC},
+						Text:        App.I18n.Tr("clear logs"),
+						Shortcut:    Shortcut{walk.ModControl, walk.KeyC},
 						OnTriggered: events.ClearLogs,
 					},
 					Separator{},
 					Action{
-						Text: App.I18n.Tr("exit"),
+						Text:        App.I18n.Tr("exit"),
 						OnTriggered: events.ExitApp,
 					},
 				},
 			},
 			Menu{
-				Text:  App.I18n.Tr("language"),
+				Text: App.I18n.Tr("language"),
 				Items: []MenuItem{
 					Action{
-						AssignTo: &App.Menus.SwitchToZH,
-						Text:     enums.ZH,
-						Checked:  App.Config.Language == enums.ZH,
+						AssignTo:    &App.Menus.SwitchToZH,
+						Text:        enums.ZH,
+						Checked:     App.Config.Language == enums.ZH,
 						OnTriggered: events.SwitchLang(enums.ZH),
 					},
 					Action{
-						AssignTo: &App.Menus.SwitchToEn,
-						Text:     enums.EN,
-						Checked:  App.Config.Language == enums.EN,
+						AssignTo:    &App.Menus.SwitchToEn,
+						Text:        enums.EN,
+						Checked:     App.Config.Language == enums.EN,
 						OnTriggered: events.SwitchLang(enums.EN),
 					},
 				},
 			},
 			Action{
-				Text: App.I18n.Tr("help"),
+				Text:        App.I18n.Tr("help"),
 				OnTriggered: events.OpenHelp,
 			},
 		},
 		Children: []Widget{
 			Label{
 				AssignTo: &App.LinkCodeLabel,
-				Font:Font{
-					PointSize: 24,
+				Font: Font{
+					PointSize: 50,
+
 					Bold: true,
 				},
-				Text:     App.LinkCode,
+				TextColor: walk.RGB(0, 144, 158),
+				Background: SolidColorBrush{Color: walk.RGB(240, 240, 240)},
+				Text:          App.LinkCode,
 				TextAlignment: AlignCenter,
 			},
 			Label{
@@ -95,7 +97,7 @@ func runMainWindow() {
 				Text:     App.Config.Data.Path,
 			},
 			PushButton{
-				Text: App.I18n.Tr("select sync path"),
+				Text:      App.I18n.Tr("select sync path"),
 				OnClicked: events.SelectDataPath,
 			},
 			ScrollView{
