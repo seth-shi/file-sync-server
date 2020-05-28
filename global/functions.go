@@ -3,6 +3,7 @@ package global
 import (
 	"flash-sync-server/models"
 	"math/rand"
+	"time"
 )
 
 func LogErrorHandle(err error)  {
@@ -29,7 +30,7 @@ func LogInfo(msg string)  {
 }
 
 
-var defaultLetters = []byte("abcdefghijklmnopqrstuvwxyz0123456789")
+var defaultLetters = []byte("0123456789")
 
 // RandomString returns a random string with a fixed length
 func RandomString(n int) string {
@@ -39,8 +40,10 @@ func RandomString(n int) string {
 
 	b := make([]byte, n)
 
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[r.Intn(len(letters))]
 	}
 
 	return string(b)
