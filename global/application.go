@@ -35,6 +35,7 @@ func init() {
 		ClientDevices: devices,
 		LogChan: make(chan *models.LogEntry, 100),
 
+		LinkCode: RandomString(enums.LINK_CODE_LENGTH),
 		Menus: &appMenus{},
 	}
 }
@@ -110,14 +111,18 @@ type application struct {
 
 	// 日志视图
 	LogView *walk.ScrollView
-	// 显示的数据路径
-	DataPathLabel *walk.Label
+	// 验证码, 数据路径
+	LinkCodeLabel, DataPathLabel *walk.Label
 	// 菜单
 	Menus *appMenus
+	// 链接验证码的label
 
 	/*******************************************
 	*  所有的数据管理
 	 */
+	// 验证码连接
+	LinkCode string
+
 	// 数据库操作对象
 	Db *leveldb.DB
 	// 数据的配置

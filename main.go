@@ -82,6 +82,15 @@ func runMainWindow() {
 		},
 		Children: []Widget{
 			Label{
+				AssignTo: &App.LinkCodeLabel,
+				Font:Font{
+					PointSize: 24,
+					Bold: true,
+				},
+				Text:     App.LinkCode,
+				TextAlignment: AlignCenter,
+			},
+			Label{
 				AssignTo: &App.DataPathLabel,
 				Text:     App.Config.Data.Path,
 			},
