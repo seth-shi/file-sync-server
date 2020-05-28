@@ -4,6 +4,7 @@ import (
 	"flash-sync-server/enums"
 	"flash-sync-server/events"
 	. "flash-sync-server/global"
+	"flash-sync-server/services"
 	"github.com/lxn/win"
 	"log"
 	"time"
@@ -16,8 +17,9 @@ import (
 func init() {
 
 	// 每隔 5s 发送一次 udp 数据包
-	go events.SendConnectUdpPack(time.NewTicker(5 * time.Second))
-
+	go services.SendConnectUdpPack(time.NewTicker(5 * time.Second))
+	// 启动一个 tcp 服务器
+	go services.StartTcpServer()
 
 	App.StartedHandle = func() {
 
@@ -38,7 +40,7 @@ func runMainWindow() {
 		AssignTo: &App.MainWindow,
 		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
-		Size:     Size{Width: enums.APP_HEIGHT, Height: enums.APP_WIDTH},
+		Size:     Size{Width: enums.APP_WIDTH, Height: enums.APP_HEIGHT},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{

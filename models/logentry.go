@@ -22,6 +22,7 @@ var labelTextColorMap = map[string]walk.Color{
 }
 
 
+
 type LogEntry struct {
 
 	createdAt time.Time
@@ -36,6 +37,7 @@ func NewLogEntry(msgType, content string) *LogEntry {
 }
 
 func InfoLog(content string) *LogEntry {
+
 
 	return &LogEntry{time.Now(), INFO, content}
 }

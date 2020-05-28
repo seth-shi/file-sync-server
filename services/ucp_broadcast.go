@@ -1,4 +1,4 @@
-package events
+package services
 
 import (
 	. "flash-sync-server/global"
@@ -21,7 +21,8 @@ func SendConnectUdpPack(ticker *time.Ticker) {
 		panic(err)
 	}
 
-	LogInfo(App.I18n.Format("start udp broadcast, udp port: {port}", plurr.Params{"port": tcpPort}))
+	LogInfo(App.I18n.Format("start udp broadcast", plurr.Params{"port": udpPort}))
+
 
 	for _ = range ticker.C {
 

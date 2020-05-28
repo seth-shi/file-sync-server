@@ -6,9 +6,11 @@ func FlushLogToView() {
 
 	for l := range App.LogChan {
 
+		lg := l
+
 		App.MainWindow.Synchronize(func() {
 
-			if err := l.PushToView(App.LogView); err != nil {
+			if err := lg.PushToView(App.LogView); err != nil {
 
 				println(err)
 			}

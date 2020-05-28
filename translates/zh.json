@@ -41,8 +41,17 @@
   "switch fail": {
     "message": "切换失败"
   },
-  "start udp broadcast, udp port: {port}": {
-    "message": "开启 udp 广播, udp 端口为: {port}"
+  "start udp broadcast": {
+    "message": "udp 广播已开始广播内容, udp 端口为: {port}"
+  },
+  "get ip fail": {
+    "message": "获取 ip 失败"
+  },
+  "start tcp server": {
+    "message": "tcp 服务器已启动,地址为: {address}"
+  },
+  "received tcp connect message": {
+    "message": "有新设备连接到服务器,设备 ip 地址: {address}"
   },
   "select sync path": {
     "message": "选择同步目录"
