@@ -4,7 +4,6 @@ import (
 	"flash-sync-server/enums"
 	"flash-sync-server/events"
 	. "flash-sync-server/global"
-	"fmt"
 	"github.com/lxn/win"
 	"log"
 	"time"
@@ -13,9 +12,6 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-const (
-	APP_WIDTH = 400
-)
 
 func init() {
 
@@ -42,7 +38,7 @@ func runMainWindow() {
 		AssignTo: &App.MainWindow,
 		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
-		Size:     Size{Width: APP_WIDTH, Height: 300},
+		Size:     Size{Width: enums.APP_HEIGHT, Height: enums.APP_WIDTH},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
@@ -51,22 +47,12 @@ func runMainWindow() {
 					Action{
 						Text:     App.I18n.Tr("clear logs"),
 						Shortcut: Shortcut{walk.ModControl, walk.KeyC},
-						OnTriggered: func() {
-
-							App.MainWindow.Synchronize(func() {
-
-								err := App.LogView.Children().Clear()
-								fmt.Println(err)
-							})
-						},
+						OnTriggered: events.ClearLogs,
 					},
 					Separator{},
 					Action{
 						Text: App.I18n.Tr("exit"),
-						OnTriggered: func() {
-
-							App.MainWindow.Close()
-						},
+						OnTriggered: events.ExitApp,
 					},
 				},
 			},

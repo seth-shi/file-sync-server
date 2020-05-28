@@ -2,5 +2,6 @@ package enums
 
 
 const (
-	APP_SIZE = 400
+	APP_WIDTH = 400
+	APP_HEIGHT = 300
 )

@@ -6,6 +6,22 @@ import (
 	"os/exec"
 )
 
+
+func ClearLogs() {
+
+	App.MainWindow.Synchronize(func() {
+
+		err := App.LogView.Children().Clear()
+		LogErrorHandle(err)
+	})
+}
+
+func ExitApp()  {
+
+	err := App.MainWindow.Close()
+	LogErrorHandle(err)
+}
+
 func SelectDataPath()  {
 
 	dlg := new(walk.FileDialog)

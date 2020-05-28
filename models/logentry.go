@@ -65,7 +65,7 @@ func (l *LogEntry) PushToView(parent walk.Container) error {
 	}
 
 	label := Label{
-		MinSize:Size{enums.APP_SIZE - (9*6), 0},
+		MinSize:Size{enums.APP_WIDTH - (9*6), 0},
 		Alignment: AlignHNearVNear,
 		TextColor: color,
 		Background: labelBgColor,
