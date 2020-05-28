@@ -1,8 +1,7 @@
-package serveices
+package events
 
 import (
 	. "flash-sync-server/global"
-	"flash-sync-server/models"
 	"github.com/iafan/Plurr/go/plurr"
 	"net"
 	"strconv"
@@ -22,8 +21,7 @@ func SendConnectUdpPack(ticker *time.Ticker) {
 		panic(err)
 	}
 
-	App.LogChan <- models.InfoLog(App.I18n.Format("start udp broadcast, udp port: {port}", plurr.Params{"port": tcpPort}))
-
+	LogInfo(App.I18n.Format("start udp broadcast, udp port: {port}", plurr.Params{"port": tcpPort}))
 
 	for _ = range ticker.C {
 
@@ -32,7 +30,7 @@ func SendConnectUdpPack(ticker *time.Ticker) {
 
 		if err != nil {
 
-			App.LogChan <- models.ErrorLog(err.Error())
+			LogErrorHandle(err)
 		}
 	}
 }

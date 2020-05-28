@@ -34,6 +34,8 @@ func init() {
 		Db:            db,
 		ClientDevices: devices,
 		LogChan: make(chan *models.LogEntry, 100),
+
+		Menus: &appMenus{},
 	}
 }
 
@@ -106,7 +108,12 @@ type application struct {
 	 */
 	MainWindow *walk.MainWindow
 
+	// 日志视图
 	LogView *walk.ScrollView
+	// 显示的数据路径
+	DataPathLabel *walk.Label
+	// 菜单
+	Menus *appMenus
 
 	/*******************************************
 	*  所有的数据管理

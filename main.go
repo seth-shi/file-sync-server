@@ -2,12 +2,11 @@ package main
 
 import (
 	"flash-sync-server/enums"
+	"flash-sync-server/events"
 	. "flash-sync-server/global"
-	"flash-sync-server/serveices"
 	"fmt"
 	"github.com/lxn/win"
 	"log"
-	"os/exec"
 	"time"
 
 	"github.com/lxn/walk"
@@ -21,23 +20,13 @@ const (
 func init() {
 
 	// 每隔 5s 发送一次 udp 数据包
-	go serveices.SendConnectUdpPack(time.NewTicker(5 * time.Second))
+	go events.SendConnectUdpPack(time.NewTicker(5 * time.Second))
+
 
 	App.StartedHandle = func() {
 
-		go func() {
-
-			for l := range App.LogChan {
-
-				App.MainWindow.Synchronize(func() {
-
-					if err := l.PushToView(App.LogView); err != nil {
-
-						println(err)
-					}
-				})
-			}
-		}()
+		// 冲刷日志到视图
+		go events.FlushLogToView()
 	}
 }
 
@@ -48,8 +37,6 @@ func main() {
 }
 
 func runMainWindow() {
-
-	var pathLabel *walk.Label
 
 	err := MainWindow{
 		AssignTo: &App.MainWindow,
@@ -85,53 +72,34 @@ func runMainWindow() {
 			},
 			Menu{
 				Text:  App.I18n.Tr("language"),
-				Items: buildLangMenu(),
+				Items: []MenuItem{
+					Action{
+						AssignTo: &App.Menus.SwitchToZH,
+						Text:     enums.ZH,
+						Checked:  App.Config.Language == enums.ZH,
+						OnTriggered: events.SwitchLang(enums.ZH),
+					},
+					Action{
+						AssignTo: &App.Menus.SwitchToEn,
+						Text:     enums.EN,
+						Checked:  App.Config.Language == enums.EN,
+						OnTriggered: events.SwitchLang(enums.EN),
+					},
+				},
 			},
 			Action{
 				Text: App.I18n.Tr("help"),
-				OnTriggered: func() {
-
-					err := exec.Command(`cmd`, `/c`, `start`, `https://github.com/seth-shi`).Start()
-
-					if err != nil {
-
-						// TODO
-						dialog, err := walk.NewDialog(App.MainWindow)
-						if err != nil {
-							panic(err)
-						}
-						dialog.SetTitle(`https://github.com/seth-shi`)
-						dialog.Show()
-					}
-				},
+				OnTriggered: events.OpenHelp,
 			},
 		},
 		Children: []Widget{
 			Label{
-				AssignTo: &pathLabel,
+				AssignTo: &App.DataPathLabel,
 				Text:     App.Config.Data.Path,
 			},
 			PushButton{
 				Text: App.I18n.Tr("select sync path"),
-				OnClicked: func() {
-
-					dlg := new(walk.FileDialog)
-					dlg.Title = App.I18n.Tr("select sync path")
-
-					if ok, err := dlg.ShowBrowseFolder(App.MainWindow); err != nil {
-						fmt.Println(err)
-						return
-					} else if !ok {
-						fmt.Println("no ok")
-						return
-					}
-
-					// 存储到环境目录
-					App.Config.Data.Path = dlg.FilePath
-					if nil == App.Config.Save() {
-						_ = pathLabel.SetText(App.Config.Data.Path)
-					}
-				},
+				OnClicked: events.SelectDataPath,
 			},
 			ScrollView{
 				AssignTo:        &App.LogView,
@@ -160,49 +128,4 @@ func runMainWindow() {
 	exitCode := App.MainWindow.Run()
 
 	log.Println("exit:", exitCode)
-}
-
-func buildLangMenu() []MenuItem {
-
-	var zhMenu, enMenu *walk.Action
-
-	return []MenuItem{
-		Action{
-			AssignTo: &zhMenu,
-			Text:     enums.ZH,
-			Checked:  App.Config.Language == enums.ZH,
-			OnTriggered: func() {
-
-				App.Config.Language = enums.ZH
-				if err := App.Config.Save(); err != nil {
-
-					fmt.Println(err)
-					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch fail"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconError)
-					return
-				}
-
-				_ = zhMenu.SetChecked(true)
-				_ = enMenu.SetChecked(false)
-				walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
-			},
-		},
-		Action{
-			AssignTo: &enMenu,
-			Text:     enums.EN,
-			Checked:  App.Config.Language == enums.EN,
-			OnTriggered: func() {
-
-				App.Config.Language = enums.EN
-				if err := App.Config.Save(); err != nil {
-					fmt.Println(err)
-					walk.MsgBox(App.MainWindow, App.I18n.Tr("switch fail"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconError)
-					return
-				}
-
-				_ = zhMenu.SetChecked(false)
-				_ = enMenu.SetChecked(true)
-				walk.MsgBox(App.MainWindow, App.I18n.Tr("switch success"), App.I18n.Tr("please reboot soft"), walk.MsgBoxIconInformation)
-			},
-		},
-	}
 }
