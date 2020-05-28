@@ -30,6 +30,11 @@ type LogEntry struct {
 	messageContent string
 }
 
+func NewLogEntry(msgType, content string) *LogEntry {
+
+	return &LogEntry{time.Now(), msgType, content}
+}
+
 func InfoLog(content string) *LogEntry {
 
 	return &LogEntry{time.Now(), INFO, content}

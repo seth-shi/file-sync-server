@@ -41,6 +41,9 @@
   "switch fail": {
     "message": "切换失败"
   },
+  "start udp broadcast, udp port: {port}": {
+    "message": "开启 udp 广播, udp 端口为: {port}"
+  },
   "select sync path": {
     "message": "选择同步目录"
   },

@@ -33,7 +33,7 @@ func init() {
 		I18n:          i18n,
 		Db:            db,
 		ClientDevices: devices,
-		LogModel: make([]*models.LogEntry, 1000),
+		LogChan: make(chan *models.LogEntry, 100),
 	}
 }
 
@@ -118,9 +118,11 @@ type application struct {
 	// 本地化
 	I18n *loc.Context
 
-	// 日志
-	LogModel []*models.LogEntry
+	LogChan chan *models.LogEntry
 
 	// 客户端的设备号
 	ClientDevices map[string]string
+
+	// 事件
+	StartedHandle func()
 }

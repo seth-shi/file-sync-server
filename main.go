@@ -3,9 +3,9 @@ package main
 import (
 	"flash-sync-server/enums"
 	. "flash-sync-server/global"
-	"flash-sync-server/models"
 	"flash-sync-server/serveices"
 	"fmt"
+	"github.com/lxn/win"
 	"log"
 	"os/exec"
 	"time"
@@ -14,46 +14,34 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-
 const (
 	APP_WIDTH = 400
 )
 
 func init() {
 
-}
-
-func main() {
-
 	// 每隔 5s 发送一次 udp 数据包
 	go serveices.SendConnectUdpPack(time.NewTicker(5 * time.Second))
 
-	logTicker := time.NewTicker(time.Millisecond * 500)
-	i := 0
-	go func() {
+	App.StartedHandle = func() {
 
-		for _ = range logTicker.C {
+		go func() {
 
-			if App.MainWindow == nil {
-				continue
+			for l := range App.LogChan {
+
+				App.MainWindow.Synchronize(func() {
+
+					if err := l.PushToView(App.LogView); err != nil {
+
+						println(err)
+					}
+				})
 			}
+		}()
+	}
+}
 
-
-			App.MainWindow.Synchronize(func() {
-
-				info := models.InfoLog("write info log")
-
-				i ++
-				if i%3==0 {
-					info := models.ErrorLog("write err log")
-					info.PushToView(App.LogView)
-
-				} else {
-					info.PushToView(App.LogView)
-				}
-			})
-		}
-	}()
+func main() {
 
 	// 程序主窗口运行
 	runMainWindow()
@@ -63,7 +51,7 @@ func runMainWindow() {
 
 	var pathLabel *walk.Label
 
-	_, err := MainWindow{
+	err := MainWindow{
 		AssignTo: &App.MainWindow,
 		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
@@ -87,7 +75,7 @@ func runMainWindow() {
 					},
 					Separator{},
 					Action{
-						Text:        App.I18n.Tr("exit"),
+						Text: App.I18n.Tr("exit"),
 						OnTriggered: func() {
 
 							App.MainWindow.Close()
@@ -146,20 +134,32 @@ func runMainWindow() {
 				},
 			},
 			ScrollView{
-				AssignTo: &App.LogView,
+				AssignTo:        &App.LogView,
 				HorizontalFixed: true,
-				Alignment: AlignHNearVNear,
+				Alignment:       AlignHNearVNear,
 				Layout:          VBox{MarginsZero: true},
-				Children: []Widget{},
+				Children:        []Widget{},
 			},
 		},
-	}.Run()
-
+	}.Create()
 
 	if err != nil {
 
 		log.Println("exit err", err)
 	}
+
+	flag := win.GetWindowLong(App.MainWindow.Handle(), win.GWL_STYLE)
+	// fixed size
+	flag &= ^win.WS_THICKFRAME
+	win.SetWindowLong(App.MainWindow.Handle(), win.GWL_STYLE, flag)
+
+	if App.StartedHandle != nil {
+		App.StartedHandle()
+	}
+
+	exitCode := App.MainWindow.Run()
+
+	log.Println("exit:", exitCode)
 }
 
 func buildLangMenu() []MenuItem {

@@ -2,9 +2,10 @@ package serveices
 
 import (
 	. "flash-sync-server/global"
-	"fmt"
-	"log"
+	"flash-sync-server/models"
+	"github.com/iafan/Plurr/go/plurr"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -21,16 +22,17 @@ func SendConnectUdpPack(ticker *time.Ticker) {
 		panic(err)
 	}
 
-	log.Printf("start udp broadcast, udp port: %d", udpPort)
+	App.LogChan <- models.InfoLog(App.I18n.Format("start udp broadcast, udp port: {port}", plurr.Params{"port": tcpPort}))
+
 
 	for _ = range ticker.C {
 
 		// 广播自己的 tcp 端口
-		msg := fmt.Sprintf("hello ! my tcp port=[%d]", tcpPort)
-		_, err := broadcast.WriteToUDP([]byte(msg), dstAddr)
-		log.Printf(msg)
+		_, err := broadcast.WriteToUDP([]byte(strconv.Itoa(tcpPort)), dstAddr)
+
 		if err != nil {
-			fmt.Println(err)
+
+			App.LogChan <- models.ErrorLog(err.Error())
 		}
 	}
 }
