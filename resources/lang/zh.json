@@ -58,5 +58,8 @@
   },
   "please reboot soft": {
     "message": "请重启软件"
+  },
+  "connected to the network?": {
+    "message": "是否连接到网络了?"
   }
 }

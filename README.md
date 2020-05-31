@@ -9,6 +9,10 @@ cd flash-sync-server
 go build
 ```
 
+## 为什么有此项目
+* 刚学完`Golang`之前一直写`Web`,想尝试一下`GUI`
+* 我电脑的[DAEMON SYNC](https://daemonsync.me/home)用不了了
+
 ## 编译选项
 ```
 go build

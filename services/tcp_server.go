@@ -1,33 +1,34 @@
 package services
 
 import (
+	"errors"
 	. "flash-sync-server/global"
-	"github.com/iafan/Plurr/go/plurr"
 	"net"
 	"strconv"
+
+	"github.com/iafan/Plurr/go/plurr"
 )
 
-
-func StartTcpServer()  {
+func StartTcpServer() {
 
 	tcpPort := strconv.Itoa(App.Config.Tcp.Port)
 
-
-	server, err := net.Listen("tcp", ":" + tcpPort)
+	server, err := net.Listen("tcp", ":"+tcpPort)
 	if err != nil {
 		LogErrorHandle(err)
 		return
 	}
 	defer server.Close()
 
-
-	ip, err := getIp()
+	ip, err := externalIP()
 	if err != nil {
+
+		LogError(err.Error())
 		LogError(App.I18n.Tr("get ip fail"))
 		return
 	}
 
-	LogInfo(App.I18n.Format("start tcp server", plurr.Params{"address": ip + ":" + tcpPort}))
+	LogInfo(App.I18n.Format("start tcp server", plurr.Params{"address": ip.String() + ":" + tcpPort}))
 
 	for {
 		conn, err := server.Accept()
@@ -41,25 +42,42 @@ func StartTcpServer()  {
 	}
 }
 
-func getIp() (string, error) {
-
-	addresses, err := net.InterfaceAddrs()
-
+func externalIP() (net.IP, error) {
+	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", nil
+		return nil, err
 	}
+	for _, face := range interfaces {
+		if face.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+		if face.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+		addresses, err := face.Addrs()
+		if err != nil {
+			return nil, err
+		}
 
-	for _, address := range addresses {
+		var ip net.IP
+		for _, addr := range addresses {
 
-		// 检查ip地址判断是否回环地址
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-
-				return ipnet.IP.String(), nil
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip = ip.To4()
+			if ip == nil {
+				continue
 			}
 
+			return ip, nil
 		}
 	}
-
-	return "", nil
+	return nil, errors.New(App.I18n.Tr("connected to the network?"))
 }

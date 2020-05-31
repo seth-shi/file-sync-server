@@ -33,10 +33,10 @@ func init() {
 		I18n:          i18n,
 		Db:            db,
 		ClientDevices: devices,
-		LogChan: make(chan *models.LogEntry, 100),
+		LogChan:       make(chan *models.LogEntry, 100),
 
 		LinkCode: RandomString(enums.LINK_CODE_LENGTH),
-		Menus: &appMenus{},
+		Menus:    &appMenus{},
 	}
 }
 
@@ -59,7 +59,6 @@ func loadIniConfig(path string) *config.AppConfig {
 		}
 	}
 
-
 	return appConfig
 }
 
@@ -71,8 +70,8 @@ func loadI18nConfig(defaultLang string) *loc.Context {
 		lang = enums.EN
 	}
 	lp := loc.NewPool(lang)
-	lp.Resources[enums.ZH] = locjson.Load("translates/zh.json")
-	lp.Resources[enums.EN] = locjson.Load("translates/en.json")
+	lp.Resources[enums.ZH] = locjson.Load("resources/lang/zh.json")
+	lp.Resources[enums.EN] = locjson.Load("resources/lang/en.json")
 	i18n := lp.GetContext(lang)
 
 	return i18n

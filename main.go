@@ -87,8 +87,8 @@ func runMainWindow() {
 
 					Bold: true,
 				},
-				TextColor: walk.RGB(0, 144, 158),
-				Background: SolidColorBrush{Color: walk.RGB(240, 240, 240)},
+				TextColor:     walk.RGB(0, 144, 158),
+				Background:    SolidColorBrush{Color: walk.RGB(240, 240, 240)},
 				Text:          App.LinkCode,
 				TextAlignment: AlignCenter,
 			},
