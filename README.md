@@ -1,7 +1,35 @@
 ## 文件传输服务端
 [文件传输客户端](https://github.com/seth-shi/file-sync-client)
 
-> 如果要让网络（同一网络）中的所有计算机都能收到这个数据包，就应该将这个数据包的接收者地址设置为这个网络中的最高的主机号。通常255.255.255.255就可以达到这个要求。所以我们如果要发送一次UDP广播报文，就可以试试如下实例代码：
+## 流程图
+```
++-----------------------------------------------+
+|                                               |            2. connect to tcp,send auth code Verifies identity
+|                                         +-----+------+  <-------------------------------------------------------+
+|                                         |            |                                                          |
+|                                         |            |     4. each file is transferred using a TCP connection   |
+|                                         |            |  <----------------------------------------------------+  |
+|               +-----------------------  |            |     The files to be uploaded include:                 |  |
+|               |                         |            |     * File not marked as uploaded                     |  |
+|               | 5. store file by        |   server   |     * The file mtime is longer than the last uptime
+|               | filepath and filename   |            |     * custom filter                                   |  |
+|               | receive eof             |            |                                                       |  |
+|               | Verify file integrity   |            |     Send the steps                                    +  |
+|               |                         |            |     send md5 filename, filepath, filesize
+|               +---------------------->  |            |     send chunk file content loop            -------------+
+|                                         |            |     send end of file                        |            |
+|                                         +------------+                                             |            |
+|                                                                                                    |            |
+|                                         | | +       6. close tcp connect                           |            |
+|                                         | | +----------------------------------------------------> |   client   |
+v                                         | |                                                        |            |
++------------+                            | |         3. auth success, begin transfer files          |            |
+|            |                            | +------------------------------------------------------> |            |
+|   client   |                            |                                                          |            |
+|            |                            |           1. send udp broad.content is tcp port          |            |
++------------+                            +--------------------------------------------------------> +------------+
+
+```
 
 ```shell script
 git clone https://github.com/seth-shi/file-sync-server
