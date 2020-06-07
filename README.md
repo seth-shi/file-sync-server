@@ -31,6 +31,9 @@ v                                         | |                                   
 
 ```
 
+## 注意事项
+* windows 防火墙必须打开`tcp`指定的端口,否则无法进行连接
+
 ```shell script
 git clone https://github.com/seth-shi/file-sync-server
 cd flash-sync-server
