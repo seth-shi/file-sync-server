@@ -5,6 +5,7 @@ import (
 	. "flash-sync-server/global"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/iafan/Plurr/go/plurr"
 )
@@ -37,9 +38,59 @@ func StartTcpServer() {
 			continue
 		}
 
-		msg := App.I18n.Format("received tcp connect message", plurr.Params{"address": conn.RemoteAddr(), "local": conn.LocalAddr()})
-		LogInfo(msg)
+		go handleFileSync(&TcpClient{conn, 1204})
 	}
+}
+
+func handleFileSync(client *TcpClient) {
+
+	msg := App.I18n.Format("received tcp connect message", plurr.Params{"address": conn.RemoteAddr()})
+	LogInfo(msg)
+
+	// 首次连接, 客户端会发送设备 id 过来
+	deviceId := string(client.readContent())
+	// 查看设备是否已经连接验证过
+	_, exists := App.ClientDevices[deviceId]
+	if !exists {
+
+		// 进行身份验证
+		client.conn.Write([]byte("link_code"))
+
+		for {
+
+			linkCode := strings.Trim(string(client.readContent()), " ")
+			if linkCode == App.LinkCode {
+				client.conn.Write([]byte("link_success"))
+				App.ClientDevices[deviceId] = deviceId
+				App.DeviceDb.Put([]byte("devices-"+deviceId), []byte(deviceId), nil)
+				break
+			}
+
+			client.conn.Write([]byte("link_fail"))
+		}
+	}
+
+	// 验证身份成功
+	// 开始发送文件名和文件内容
+}
+
+func (client *TcpClient) readContent() []byte {
+
+	//读取客户端发送的内容
+	buf := make([]byte, client.bufSize)
+	n, err := client.conn.Read(buf)
+
+	if err != nil {
+		LogErrorHandle(err)
+		return []byte{}
+	}
+
+	return buf[:n]
+}
+
+type TcpClient struct {
+	conn    net.Conn
+	bufSize int
 }
 
 func externalIP() (net.IP, error) {

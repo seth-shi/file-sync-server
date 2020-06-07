@@ -6,8 +6,6 @@ import (
 	"flash-sync-server/models"
 	"time"
 
-	"github.com/syndtr/goleveldb/leveldb/util"
-
 	"github.com/iafan/go-l10n/loc"
 	"github.com/iafan/go-l10n/locjson"
 	"github.com/lxn/walk"
@@ -25,13 +23,13 @@ func init() {
 
 	appConfig := loadIniConfig(iniPath)
 	i18n := loadI18nConfig(appConfig.Language)
-	db := openDatabase(dbPath)
-	devices := loadDevices(db)
+	deviceDb := openDatabase(dbPath + "/devices")
+	devices := loadDevices(deviceDb)
 
 	App = &application{
 		Config:        appConfig,
 		I18n:          i18n,
-		Db:            db,
+		DeviceDb:      deviceDb,
 		ClientDevices: devices,
 		LogChan:       make(chan *models.LogEntry, 100),
 
@@ -91,7 +89,7 @@ func loadDevices(db *leveldb.DB) map[string]string {
 
 	devices := make(map[string]string)
 	// 读取所有设备号
-	iter := db.NewIterator(util.BytesPrefix([]byte("devices-")), nil)
+	iter := db.NewIterator(nil, nil)
 	for iter.Next() {
 		// Use key/value.
 		devices[string(iter.Key())] = string(iter.Value())
@@ -123,7 +121,7 @@ type application struct {
 	LinkCode string
 
 	// 数据库操作对象
-	Db *leveldb.DB
+	DeviceDb *leveldb.DB
 	// 数据的配置
 	Config *config.AppConfig
 	// 本地化
