@@ -1,7 +1,9 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"flash-sync-server/enums"
 	. "flash-sync-server/global"
 	"net"
 	"strconv"
@@ -44,7 +46,7 @@ func StartTcpServer() {
 
 func handleFileSync(client *TcpClient) {
 
-	msg := App.I18n.Format("received tcp connect message", plurr.Params{"address": conn.RemoteAddr()})
+	msg := App.I18n.Format("received tcp connect message", plurr.Params{"address": client.conn.RemoteAddr()})
 	LogInfo(msg)
 
 	// 首次连接, 客户端会发送设备 id 过来
@@ -54,24 +56,41 @@ func handleFileSync(client *TcpClient) {
 	if !exists {
 
 		// 进行身份验证
-		client.conn.Write([]byte("link_code"))
+		_ = client.writeContents(enums.LinkCode)
 
 		for {
 
 			linkCode := strings.Trim(string(client.readContent()), " ")
 			if linkCode == App.LinkCode {
-				client.conn.Write([]byte("link_success"))
+				_ = client.writeContents(enums.LinkSuccess)
+
+				// 验证成功加入到设备号当中
 				App.ClientDevices[deviceId] = deviceId
-				App.DeviceDb.Put([]byte("devices-"+deviceId), []byte(deviceId), nil)
+				if err := App.DeviceDb.Put([]byte("devices-"+deviceId), []byte(deviceId), nil); err != nil {
+					LogErrorHandle(err)
+				}
 				break
 			}
-
-			client.conn.Write([]byte("link_fail"))
+			_ = client.writeContents(enums.LinkFail)
 		}
 	}
 
-	// 验证身份成功
-	// 开始发送文件名和文件内容
+	var fileInfo FileInfo
+
+	for {
+
+		// 验证身份成功
+		// 先发送文件名,文件大小.
+		_ = client.writeContents(enums.FileInfo)
+		err := json.Unmarshal(client.readContent(), &fileInfo)
+		if err == nil {
+			break
+		}
+
+		LogErrorHandle(err)
+	}
+
+	// 开始切片内容
 }
 
 func (client *TcpClient) readContent() []byte {
@@ -88,9 +107,16 @@ func (client *TcpClient) readContent() []byte {
 	return buf[:n]
 }
 
-type TcpClient struct {
-	conn    net.Conn
-	bufSize int
+func (client *TcpClient) writeContents(msg string) error {
+
+	//读取客户端发送的内容
+	_, err := client.conn.Write([]byte(msg))
+	if err != nil {
+
+		LogErrorHandle(err)
+	}
+
+	return err
 }
 
 func externalIP() (net.IP, error) {
@@ -131,4 +157,14 @@ func externalIP() (net.IP, error) {
 		}
 	}
 	return nil, errors.New(App.I18n.Tr("connected to the network?"))
+}
+
+type TcpClient struct {
+	conn    net.Conn
+	bufSize int
+}
+
+type FileInfo struct {
+	FileName string `json:"file_name"`
+	FileSize int    `json:"file_size"`
 }

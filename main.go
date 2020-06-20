@@ -5,9 +5,10 @@ import (
 	"flash-sync-server/events"
 	. "flash-sync-server/global"
 	"flash-sync-server/services"
-	"github.com/lxn/win"
 	"log"
 	"time"
+
+	"github.com/lxn/win"
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
@@ -39,7 +40,7 @@ func runMainWindow() {
 		AssignTo: &App.MainWindow,
 		Title:    App.I18n.Tr("app_name"),
 		Icon:     "assets/icons/app.png",
-		Size:     Size{Width: enums.APP_WIDTH, Height: enums.APP_HEIGHT},
+		Size:     Size{Width: enums.AppWidth, Height: enums.AppHeight},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{

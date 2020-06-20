@@ -33,7 +33,7 @@ func init() {
 		ClientDevices: devices,
 		LogChan:       make(chan *models.LogEntry, 100),
 
-		LinkCode: RandomString(enums.LINK_CODE_LENGTH),
+		LinkCode: RandomString(enums.LinkCodeLength),
 		Menus:    &appMenus{},
 	}
 }

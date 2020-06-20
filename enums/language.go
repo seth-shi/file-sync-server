@@ -1,7 +1,6 @@
 package enums
 
-
-var (
+const (
 	EN string = "en"
 	ZH string = "zh"
 )

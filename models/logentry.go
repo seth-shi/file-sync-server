@@ -2,29 +2,27 @@ package models
 
 import (
 	"flash-sync-server/enums"
-	"github.com/lxn/walk"
-	. "github.com/lxn/walk/declarative"
 	"strings"
 	"time"
+
+	"github.com/lxn/walk"
+	. "github.com/lxn/walk/declarative"
 )
 
 const (
-	INFO = "info"
+	INFO   = "info"
 	WARING = "waring"
-	ERROR = "error"
+	ERROR  = "error"
 )
 
 var labelBgColor = SolidColorBrush{Color: walk.RGB(240, 240, 240)}
 var labelTextColorMap = map[string]walk.Color{
-	INFO: walk.RGB(100, 100, 100),
+	INFO:   walk.RGB(100, 100, 100),
 	WARING: walk.RGB(255, 241, 0),
-	ERROR: walk.RGB(153, 0, 51),
+	ERROR:  walk.RGB(153, 0, 51),
 }
 
-
-
 type LogEntry struct {
-
 	createdAt time.Time
 
 	messageType    string
@@ -37,7 +35,6 @@ func NewLogEntry(msgType, content string) *LogEntry {
 }
 
 func InfoLog(content string) *LogEntry {
-
 
 	return &LogEntry{time.Now(), INFO, content}
 }
@@ -60,18 +57,17 @@ func (l *LogEntry) PushToView(parent walk.Container) error {
 		l.messageContent,
 	}
 
-
 	color, exists := labelTextColorMap[l.messageType]
-	if ! exists {
+	if !exists {
 		color, _ = labelTextColorMap[INFO]
 	}
 
 	label := Label{
-		MinSize:Size{enums.APP_WIDTH - (9*6), 0},
-		Alignment: AlignHNearVNear,
-		TextColor: color,
+		MinSize:    Size{enums.AppWidth - (9 * 6), 0},
+		Alignment:  AlignHNearVNear,
+		TextColor:  color,
 		Background: labelBgColor,
-		Text: strings.Join(logs, "  "),
+		Text:       strings.Join(logs, "  "),
 	}
 
 	return label.Create(NewBuilder(parent))
